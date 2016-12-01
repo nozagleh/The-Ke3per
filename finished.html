@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link type="text/css" rel="stylesheet" href="styles.css">
+        <link href='http://fonts.googleapis.com/css?family=Monoton' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Cabin:400,700' rel='stylesheet' type='text/css'>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script>
+            $(function(){
+                console.log("ready");
+                var getList = function(){
+                    $('.todo').each(function(){
+                        $(this).remove();
+                    });
+                    $.ajax({
+                    type: "GET",
+                    url: "todos.xml",
+                    dataType: "xml",
+                    success: function(xml) {
+                        console.log("Success");
+                        $(xml).find('todo').each(function(){
+                            var text = $(this).find('text').text();
+                            var checked = $(this).find('checked').text();
+                            if(checked == "true"){
+                                $('<section class="todo finished"></section>').html('<a href="#"></a><span class="text">' + text +'</span><a href="#" class="trash"></a>').appendTo('#wrapper');
+                            }
+                            
+                        });
+                    },
+                    error: function(){
+                        console.log("Error");
+                    }
+                    });
+                };
+                getList();
+                
+                $(document).on('click','.todo a',function(e){
+                    e.preventDefault();
+                    var spanText = $(this).siblings('.text').text();
+                    
+                    $.ajax({
+                        type: "POST",
+                        url: "removeTODO.php",
+                        data: {text:spanText},
+                        success: function(){
+                        },
+                        error: function(){
+                            alert("Error removing the new todo item");
+                        }
+                    });
+                    
+                    $(this).closest('.todo').remove();
+                    return false;
+                });
+                
+                $('footer a').click(function(e){
+                    e.preventDefault();
+                    console.log("clicked");
+                    
+                    $.ajax({
+                        url: "resetXML.php",
+                        success: function(resp){
+                            console.log("Called: "+ resp);
+                            getList();
+                        },
+                        error: function(){
+                            console.log("not called");
+                        }
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <header>
+            <h1><a href="index.html">THE KE3PER</a></h1>
+            <a href="index.html" class="menu">Tasks</a>
+            <a href="finished.html" class="menu">Finished</a>
+            <a href="project.html" class="menu">The Project</a>
+        </header>
+        <div id="wrapper"></div>
+        <footer>
+            <a href="#" id="reset">Reset todo list</a><span> | </span><a href="todos.xml" download="TODO.xml">Download XML</a>
+        </footer>
+    </body>
+</html>
